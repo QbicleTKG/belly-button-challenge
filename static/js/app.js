@@ -65,12 +65,28 @@ function createChart(sample) {
   };
 
  // layout for bubble chart
-
+ const bubbleTrace = {
+  x: topOTU.map(({ otu_id }) => otu_id), // Use otu_id for the x-axis
+  y: topOTU.map(({ sample_value }) => sample_value), // Use sample_value for the y-axis
+  text: topOTU.map(({ otu_label }) => otu_label), // Text labels
+  mode: 'markers', // Bubble chart
+  marker: {
+      size: topOTU.map(({ sample_value }) => sample_value), // Size of the bubbles
+      color: topOTU.map(({ otu_id }) => otu_id), // Assign colors based on otu_id (optional)
+      colorscale: 'Earth', // You can choose any colorscale
+      opacity: 0.7,
+      line: {
+          color: 'rgb(8,48,107)',
+          width: 1
+      }
+  }
+};
  // prepare data for gauge chart
 
 // create plotly charts
 
 Plotly.newPlot('bar', [barTrace]);
+Plotly.newPlot('bubble', [bubbleTrace]);
  // Plotly.newPlot('bubble')
  // Plotly.newPlot('gauge')
 
