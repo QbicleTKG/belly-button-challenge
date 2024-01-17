@@ -1,14 +1,13 @@
-// fetch json data
+// fetch json data and establish a globalData variable so the data call works outside of initialization
 const url = "https://2u-data-curriculum-team.s3.amazonaws.com/dataviz-classroom/v1.1/14-Interactive-Web-Visualizations/02-Homework/samples.json";
 
 let globalData;
 
 d3.json(url).then(data => {
-    globalData = data; // Save the fetched data to the global variable
+    globalData = data; 
     populateDropdown(data);
-    optionChanged(data.samples[0].id, data); // Adjusted to pass the ID and data
+    optionChanged(data.samples[0].id, data); 
 });
-
 
 // populate dropdown with names and data
 function populateDropdown(data) {
@@ -17,21 +16,39 @@ function populateDropdown(data) {
         .data(data.samples)
         .enter()
         .append("option")
-        .text(d => d.id); // Assuming each sample has an 'id' you want to use
+        .text(d => d.id); 
 }
 
+// function to update metadata panel
+function updateMetadata(selectedId) {
+  const metadata = globalData.metadata.find(item => item.id == selectedId); 
+
+  const metadataContainer = d3.select("#sample-metadata");
+  metadataContainer.html(""); 
+
+  Object.entries(metadata).forEach(([key, value]) => {
+      metadataContainer.append("p").text(`${key}: ${value}`);
+  });
+}
+
+// Event listener for dropdown change
+d3.select("#selDataset").on("change", function() {
+  const selectedId = d3.select(this).property("value");
+  updateMetadata(selectedId);
+});
+
+// create d3 function for dropdown button to call "optionChanged" function
 d3.select("#selDataset").on("change", function() {
     const selectedId = d3.select(this).property("value");
     optionChanged(selectedId, globalData);
 });
 
-
-function optionChanged(selectedId, data) {
-    const selectedSample = data.samples.find(sample => sample.id === selectedId);
-    createChart(selectedSample);
+// create optionChanged function to 
+function optionChanged(selectedId) {
+  const selectedSample = globalData.samples.find(sample => sample.id == selectedId);
+  createChart(selectedSample);
+  updateMetadata(selectedId); 
 }
-
-// create metadata panel
 
 // Create Chart using Plotly
 function createChart(sample) {
@@ -46,7 +63,7 @@ function createChart(sample) {
 
   // Sort and Filter Top 10 Samples
   const topOTU = sampleData.sort((a, b) => b.sample_value - a.sample_value).slice(0, 10).reverse();
-  console.log(topOTU)
+  
   // Prepare data for Plotly Bar Chart
   const barTrace = {
     x: topOTU.map(({ sample_value }) => sample_value),
@@ -64,16 +81,16 @@ function createChart(sample) {
     }
   };
 
- // layout for bubble chart
+ // layout for Plotly Bubble Chart
  const bubbleTrace = {
-  x: topOTU.map(({ otu_id }) => otu_id), // Use otu_id for the x-axis
-  y: topOTU.map(({ sample_value }) => sample_value), // Use sample_value for the y-axis
-  text: topOTU.map(({ otu_label }) => otu_label), // Text labels
-  mode: 'markers', // Bubble chart
+  x: sampleData.map(({ otu_id }) => otu_id), 
+  y: sampleData.map(({ sample_value }) => sample_value), 
+  text: sampleData.map(({ otu_label }) => otu_label), 
+  mode: 'markers', 
   marker: {
-      size: topOTU.map(({ sample_value }) => sample_value), // Size of the bubbles
-      color: topOTU.map(({ otu_id }) => otu_id), // Assign colors based on otu_id (optional)
-      colorscale: 'Earth', // You can choose any colorscale
+      size: sampleData.map(({ sample_value }) => sample_value), 
+      color: sampleData.map(({ otu_id }) => otu_id), 
+      colorscale: 'Earth', 
       opacity: 0.7,
       line: {
           color: 'rgb(8,48,107)',
@@ -81,19 +98,9 @@ function createChart(sample) {
       }
   }
 };
- // prepare data for gauge chart
 
 // create plotly charts
-
 Plotly.newPlot('bar', [barTrace]);
 Plotly.newPlot('bubble', [bubbleTrace]);
- // Plotly.newPlot('bubble')
- // Plotly.newPlot('gauge')
 
-// update plot on dropdown
-
-
-// fetch and initialize page
-
-// trigger fetching and utilization
 }
